@@ -21,7 +21,7 @@ const logger = createLogger({
  *
  * @param destination - The destination to which the proxy configuration should be added.
  * @param jwt - The JWT of the current user.
- * @returns A promise resolving to the destiation with the added proxy configuration.
+ * @returns A promise resolving to the destination with the added proxy configuration.
  */
 export function addProxyConfiguration(
   destination: Destination,
@@ -49,12 +49,13 @@ interface HostAndPort {
   protocol: Protocol.HTTP;
 }
 
-function proxyHostAndPort(): HostAndPort {
+export function proxyHostAndPort(): HostAndPort {
   const service = readConnectivityServiceBinding();
-
   return {
     host: service.credentials.onpremise_proxy_host,
-    port: service.credentials.onpremise_proxy_port,
+    port:
+      service.credentials.onpremise_proxy_http_port ||
+      service.credentials.onpremise_proxy_port,
     protocol: Protocol.HTTP
   };
 }

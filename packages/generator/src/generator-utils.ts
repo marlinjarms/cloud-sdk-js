@@ -15,30 +15,65 @@ function hasCapability(object: any, capability: string) {
   return !(capability in object) || object[capability] === 'true';
 }
 
+/**
+ * Checks if the 'sap:deletable' property is present on the given input.
+ * @param entity - Object to be checked.
+ * @returns true per default or if {sap:deletable:'true'} is in the object.
+ */
 export function isDeletable(entity: any): boolean {
   return hasCapability(entity, 'sap:deletable');
 }
 
+/**
+ * Checks if the 'sap:updatable' property is present on the given input.
+ * @param entity - Object to be checked.
+ * @returns true per default or if {sap:updatable:'true'} is in the object.
+ */
 export function isUpdatable(entity: any): boolean {
   return hasCapability(entity, 'sap:updatable');
 }
 
+/**
+ * Checks if the 'sap:creatable' property is present on the given input.
+ * @param entity - Object to be checked.
+ * @returns true per default or if {sap:creatable:'true'} is in the object.
+ */
 export function isCreatable(entity: any): boolean {
   return hasCapability(entity, 'sap:creatable');
 }
 
+/**
+ * Checks if the 'sap:sortable' property is present on the given input.
+ * @param property - Object to be checked.
+ * @returns true per default or if {sap:sortable:'true'} is in the object.
+ */
 export function isSortable(property: any): boolean {
   return hasCapability(property, 'sap:sortable');
 }
 
+/**
+ * Checks if the 'sap:filterable' property is present on the given input.
+ * @param property - Object to be checked.
+ * @returns true per default or if {sap:filterable:'true'} is in the object.
+ */
 export function isFilterable(property: any): boolean {
   return hasCapability(property, 'sap:filterable');
 }
 
+/**
+ * Checks if the 'Nullable' property is present on the given input.
+ * @param property - Object to be checked.
+ * @returns true per default or if {Nullable:'true'} is in the object.
+ */
 export function isNullableProperty(property: any): boolean {
   return hasCapability(property, 'Nullable');
 }
 
+/**
+ * Checks if the 'Nullable' property is present on the given input.
+ * @param parameter - Object to be checked.
+ * @returns false per default or if {Nullable:'false'} is in the object.
+ */
 export function isNullableParameter(parameter: any): boolean {
   return !!parameter['Nullable'] && parameter['Nullable'] !== 'false';
 }
@@ -79,42 +114,31 @@ const edmToTsTypeMapping: EdmTypeMappingWithoutEnum = {
 };
 
 const edmToFieldTypeMapping: EdmTypeMapping = {
-  'Edm.String': 'StringField',
-  'Edm.Boolean': 'BooleanField',
-  'Edm.Guid': 'StringField',
-  'Edm.Decimal': 'BigNumberField',
-  'Edm.Int16': 'NumberField',
-  'Edm.Int32': 'NumberField',
-  'Edm.Int64': 'BigNumberField',
-  'Edm.Single': 'NumberField',
-  'Edm.Double': 'NumberField',
-  'Edm.Float': 'NumberField', // ABAP CDS compatibility
-  'Edm.Byte': 'NumberField',
-  'Edm.SByte': 'NumberField',
-  'Edm.DateTimeOffset': 'DateField',
-  'Edm.Binary': 'BinaryField',
-  'Edm.Any': 'AnyField',
+  'Edm.String': 'EdmTypeField',
+  'Edm.Boolean': 'EdmTypeField',
+  'Edm.Guid': 'EdmTypeField',
+  'Edm.Decimal': 'OrderableEdmTypeField',
+  'Edm.Int16': 'OrderableEdmTypeField',
+  'Edm.Int32': 'OrderableEdmTypeField',
+  'Edm.Int64': 'OrderableEdmTypeField',
+  'Edm.Single': 'OrderableEdmTypeField',
+  'Edm.Double': 'OrderableEdmTypeField',
+  'Edm.Float': 'OrderableEdmTypeField', // ABAP CDS compatibility
+  'Edm.Byte': 'OrderableEdmTypeField',
+  'Edm.SByte': 'OrderableEdmTypeField',
+  'Edm.DateTimeOffset': 'OrderableEdmTypeField',
+  'Edm.Binary': 'EdmTypeField',
+  'Edm.Any': 'EdmTypeField',
 
   // OData v2 specific
-  'Edm.DateTime': 'DateField',
-  'Edm.Time': 'TimeField',
+  'Edm.DateTime': 'OrderableEdmTypeField',
+  'Edm.Time': 'OrderableEdmTypeField',
 
   // OData v4 specific
-  'Edm.Date': 'DateField',
-  'Edm.Duration': 'DurationField',
-  'Edm.TimeOfDay': 'TimeField',
-  'Edm.Enum': 'EnumField'
-};
-
-const fieldTypeToComplexPropertyTypeMapping = {
-  BigNumberField: 'ComplexTypeBigNumberPropertyField',
-  BinaryField: 'ComplexTypeBinaryPropertyField',
-  BooleanField: 'ComplexTypeBooleanPropertyField',
-  DateField: 'ComplexTypeDatePropertyField',
-  NumberField: 'ComplexTypeNumberPropertyField',
-  StringField: 'ComplexTypeStringPropertyField',
-  TimeField: 'ComplexTypeTimePropertyField',
-  AnyField: 'ComplexTypeAnyPropertyField'
+  'Edm.Date': 'OrderableEdmTypeField',
+  'Edm.Duration': 'OrderableEdmTypeField',
+  'Edm.TimeOfDay': 'OrderableEdmTypeField',
+  'Edm.Enum': 'EdmTypeField'
 };
 
 export function getFallbackEdmTypeIfNeeded(
@@ -124,7 +148,7 @@ export function getFallbackEdmTypeIfNeeded(
     return edmType as EdmTypeShared<any>;
   }
   logger.warn(
-    `The type ${edmType} is currently not supported by the sdk. Type "any" is used as fallback.`
+    `The EDM type '${edmType}' is unknown or not supported by the SAP Cloud SDK. Using "any" as fallback.`
   );
   return 'Edm.Any';
 }
@@ -132,7 +156,9 @@ export function getFallbackEdmTypeIfNeeded(
 export function edmToTsType(edmType: string): string {
   const tsType = edmToTsTypeMapping[edmType];
   if (!tsType) {
-    throw new Error(`No ts type found for edm type: ${edmType}`);
+    throw new Error(
+      `Could not determine TypeScript type for EDM type: '${edmType}'.`
+    );
   }
   return tsType;
 }
@@ -140,16 +166,19 @@ export function edmToTsType(edmType: string): string {
 export function edmToFieldType(edmType: string): string {
   const fieldType = edmToFieldTypeMapping[edmType];
   if (!fieldType) {
-    throw new Error(`No field type found for edm type: ${edmType}`);
+    throw new Error(
+      `Could not determine field type for EDM type: '${edmType}'.`
+    );
   }
   return fieldType;
 }
 
 export function edmToComplexPropertyType(edmType: string): string {
-  const fieldType =
-    fieldTypeToComplexPropertyTypeMapping[edmToFieldType(edmType)];
+  const fieldType = edmToFieldType(edmType);
   if (!fieldType) {
-    throw new Error(`No complex field type found for edm type: ${edmType}`);
+    throw new Error(
+      `Could not determine complex field type for EDM type: '${edmType}'.`
+    );
   }
   return fieldType;
 }
@@ -191,44 +220,32 @@ export function linkClass(
 
 export function getGenericParameters(
   entityClassName: string,
-  prop: VdmProperty
+  prop: VdmProperty,
+  isSelectable: boolean
 ): string {
-  let param: string[] = [];
+  const params = [entityClassName];
   if (prop.isCollection) {
-    if (prop.isComplex) {
-      param = [`${prop.jsType}`];
-    } else if (prop.isEnum) {
-      param = ["'Edm.Enum'"];
+    if (prop.isEnum) {
+      params.push(`typeof ${prop.jsType}`);
+    } else if (prop.isComplex) {
+      params.push(prop.jsType);
     } else {
-      param = [`'${prop.edmType}'`];
+      params.push(`'${prop.edmType}'`);
+    }
+  } else {
+    if (prop.isEnum) {
+      params.push(`${prop.jsType}`);
+    } else if (prop.isComplex) {
+      // prettier-ignore
+    } else {
+      params.push(`'${prop.edmType}'`);
     }
   }
-  return [entityClassName, ...param].join(', ');
-}
 
-export function createPropertyFieldInitializer(
-  property: VdmProperty,
-  entityClassName: string
-): string {
-  const edmOrComplexTypeOrEnumType =
-    property.isComplex || property.isEnum
-      ? property.jsType
-      : `'${property.edmType}'`;
-  let collectionTypeOrEdmType: string | undefined = edmOrComplexTypeOrEnumType;
-  if (property.isComplex && !property.isCollection) {
-    collectionTypeOrEdmType = undefined;
-  } else if (property.isEnum && !property.isCollection) {
-    collectionTypeOrEdmType = undefined;
-  } else if (property.isEnum && property.isCollection) {
-    collectionTypeOrEdmType = "'Edm.Enum'";
-  }
-  return `new ${property.fieldType}(${[
-    `'${property.originalName}'`,
-    entityClassName,
-    ...(typeof collectionTypeOrEdmType === 'undefined'
-      ? []
-      : [collectionTypeOrEdmType])
-  ].join(', ')})`;
+  params.push(prop.nullable.toString());
+  params.push(isSelectable.toString());
+
+  return params.join(', ');
 }
 
 /**

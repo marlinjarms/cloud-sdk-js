@@ -16,6 +16,10 @@ var __extends =
       return extendStatics(d, b);
     };
     return function (d, b) {
+      if (typeof b !== 'function' && b !== null)
+        throw new TypeError(
+          'Class extends value ' + String(b) + ' is not a constructor or null'
+        );
       extendStatics(d, b);
       function __() {
         this.constructor = d;
@@ -50,6 +54,7 @@ exports.People = void 0;
  */
 var PeopleRequestBuilder_1 = require('./PeopleRequestBuilder');
 var Location_1 = require('./Location');
+var PersonGender_1 = require('./PersonGender');
 var core_1 = require('@sap-cloud-sdk/core');
 /**
  * This class represents the entity "People" of service "Microsoft.OData.SampleService.Models.TripPin".
@@ -102,48 +107,69 @@ var People = /** @class */ (function (_super) {
 exports.People = People;
 var Photos_1 = require('./Photos');
 (function (People) {
+  var _fieldBuilder = new core_1.FieldBuilder(People);
   /**
    * Static representation of the [[userName]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.USER_NAME = new core_1.StringField('UserName', People, 'Edm.String');
+  People.USER_NAME = _fieldBuilder.buildEdmTypeField(
+    'UserName',
+    'Edm.String',
+    false
+  );
   /**
    * Static representation of the [[firstName]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.FIRST_NAME = new core_1.StringField('FirstName', People, 'Edm.String');
+  People.FIRST_NAME = _fieldBuilder.buildEdmTypeField(
+    'FirstName',
+    'Edm.String',
+    false
+  );
   /**
    * Static representation of the [[lastName]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.LAST_NAME = new core_1.StringField('LastName', People, 'Edm.String');
+  People.LAST_NAME = _fieldBuilder.buildEdmTypeField(
+    'LastName',
+    'Edm.String',
+    false
+  );
   /**
    * Static representation of the [[emails]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.EMAILS = new core_1.CollectionField('Emails', People, 'Edm.String');
+  People.EMAILS = _fieldBuilder.buildCollectionField(
+    'Emails',
+    'Edm.String',
+    true
+  );
   /**
    * Static representation of the [[addressInfo]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.ADDRESS_INFO = new core_1.CollectionField(
+  People.ADDRESS_INFO = _fieldBuilder.buildCollectionField(
     'AddressInfo',
-    People,
-    Location_1.Location
+    Location_1.Location,
+    true
   );
   /**
    * Static representation of the [[gender]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.GENDER = new core_1.EnumField('Gender', People);
+  People.GENDER = _fieldBuilder.buildEnumField(
+    'Gender',
+    PersonGender_1.PersonGender,
+    true
+  );
   /**
    * Static representation of the [[concurrency]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  People.CONCURRENCY = new core_1.BigNumberField(
+  People.CONCURRENCY = _fieldBuilder.buildEdmTypeField(
     'Concurrency',
-    People,
-    'Edm.Int64'
+    'Edm.Int64',
+    false
   );
   /**
    * Static representation of the one-to-many navigation property [[friends]] for query construction.

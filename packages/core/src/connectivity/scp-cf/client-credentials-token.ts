@@ -5,8 +5,8 @@ import {
   ClientCredentialsResponse
 } from './xsuaa-service-types';
 
-// TODO: This should be moved down to the token accessor
 /**
+ * @deprecated Since v1.47.0.
  * Retrieves an access token required for "OAuth2ClientCredentials" destination authentication type.
  *
  * @param destination - A destination having `OAuth2ClientCredentials` authentication type
@@ -16,15 +16,14 @@ export async function getOAuth2ClientCredentialsToken(
   destination: Destination
 ): Promise<ClientCredentialsResponse> {
   if (!areValidCredentials(destination)) {
-    throw Error(
-      'The provided destination does not comply to "OAuth2ClientCredentials" authentication requirements. ' +
-        'Check whether the destination includes "tokenServiceUrl", "clientId" and "clientSecret" attributes.'
+    throw new Error(
+      'The provided destination does not comply to "OAuth2ClientCredentials" authentication requirements. Check whether the destination includes the `tokenServiceUrl`, `clientId`, and `clientSecret` attributes.'
     );
   }
 
   if (!destination.tokenServiceUrl) {
-    throw Error(
-      `The destination tokenServiceUrl:${destination.tokenServiceUrl} is undefined.`
+    throw new Error(
+      'The property `tokenServiceUrl` of the destination is undefined.'
     );
   }
 
@@ -64,6 +63,6 @@ function getTokenServiceCredentials(
   }
 
   throw new Error(
-    'Either tokenServiceUser/tokenServicePassword or clientId/clientSecret should be defined.'
+    'Either `tokenServiceUser`/`tokenServicePassword` or `clientId`/`clientSecret` should be defined.'
   );
 }

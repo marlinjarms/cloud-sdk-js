@@ -18,7 +18,7 @@ export interface SdkMetadataHeader {
  * Represents the language specific data of the sdk metadata
  */
 export interface Client {
-  language: 'java' | 'javascript';
+  language: 'Java' | 'JavaScript';
   /**
    * Status of the service.
    * @memberof Client
@@ -60,7 +60,7 @@ export interface PregeneratedLibrary {
    * @memberof PregeneratedLibrary
    */
   compatibilityNotes: '';
-  repository: 'maven' | 'npm';
+  repository: 'Maven' | 'npm';
   repositoryLink: UrlString;
   dependencyName: string;
 }
@@ -75,9 +75,10 @@ export interface Links {
 export interface GenerationAndUsage {
   generatorVersion: string;
   generatorRepositoryLink: UrlString;
+  repository: 'Maven' | 'npm';
   generationSteps: InstructionWithText;
-  apiSpecificUsage: InstructionWithText;
-  genericUsage: InstructionWithText;
+  apiSpecificUsage: InstructionWithTextAndHeader | undefined;
+  genericUsage: InstructionWithTextAndHeader;
   links: Links;
 }
 
@@ -96,16 +97,17 @@ export interface ServiceStatus {
   /**
    * certified -> Published lib, verified -> Generation worked
    */
-  status: 'certified' | 'verified' | 'unknown';
+  status: 'certified' | 'verified' | 'unknown' | 'failed';
   /**
    * Detailed text what the serviceStatus means.
    * @memberof Client
    */
   statusText: string;
   /**
-   * Getting started text, depends on the service status
+   * Like the short version but more information.
+   * @memberof Client
    */
-  gettingStartedText: string;
+  statusLongText: string;
 }
 
 /**
@@ -130,4 +132,11 @@ export interface EmergencyObject {
 export interface InstructionWithText {
   instructions: MultiLineText;
   text: string;
+}
+
+/**
+ *  Represents a instruction block e.g. generation steps with some text above the code block with a header
+ */
+export interface InstructionWithTextAndHeader extends InstructionWithText {
+  header: string;
 }

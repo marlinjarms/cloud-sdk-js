@@ -47,7 +47,7 @@ export async function addAuthorizationHeader<
   };
 }
 
-function hasAuthHeaders(destination: Destination): boolean {
+function needsAuthHeaders(destination: Destination): boolean {
   if (!destination.authentication) {
     return false;
   }
@@ -56,25 +56,46 @@ function hasAuthHeaders(destination: Destination): boolean {
     'OAuth2ClientCredentials',
     'OAuth2SAMLBearerAssertion',
     'OAuth2UserTokenExchange',
+    'OAuth2JWTBearer',
     'PrincipalPropagation'
   ];
   return authTypesWithAuthorizationHeader.includes(destination.authentication);
+}
+
+function getCustomAuthHeaders(
+  destination: Destination,
+  customHeaders?: Record<string, any>
+) {
+  if (destination.authentication === 'PrincipalPropagation') {
+    return pickIgnoreCase(customHeaders, 'SAP-Connectivity-Authentication');
+  }
+  return pickIgnoreCase(customHeaders, 'authorization');
 }
 
 export async function getAuthHeaders(
   destination: Destination,
   customHeaders?: Record<string, any>
 ): Promise<Record<string, string>> {
-  const customAuthHeaders = pickIgnoreCase(customHeaders, 'authorization');
+  const customAuthHeaders = getCustomAuthHeaders(destination, customHeaders);
 
-  if (Object.keys(customAuthHeaders).length && hasAuthHeaders(destination)) {
+  if (Object.keys(customAuthHeaders).length && needsAuthHeaders(destination)) {
     logger.warn(
       'Found custom authorization headers. The given destination also provides authorization headers. This might be unintended. The custom headers from the request config will be used.'
     );
   }
-  return Object.keys(customAuthHeaders).length
-    ? customAuthHeaders
-    : buildAuthorizationHeaders(destination);
+
+  const additionalDestinationAuthHeaders = getCustomAuthHeaders(
+    destination,
+    destination.headers
+  );
+
+  if (Object.keys(customAuthHeaders).length) {
+    return customAuthHeaders;
+  }
+  if (Object.keys(additionalDestinationAuthHeaders).length) {
+    return additionalDestinationAuthHeaders;
+  }
+  return buildAuthorizationHeaders(destination);
 }
 
 /**
@@ -95,6 +116,7 @@ export function buildAndAddAuthorizationHeader(destination: Destination) {
     };
   };
 }
+
 function toAuthorizationHeader(authorization: string): Record<string, string> {
   return toSanitizedObject('authorization', authorization);
 }
@@ -105,7 +127,7 @@ function headerFromTokens(
 ): Record<string, string> {
   if (!authTokens || !authTokens.length) {
     throw Error(
-      `AuthenticationType is ${authenticationType}, but no AuthTokens could be fetched from the destination service!`
+      `\`AuthenticationType\` is "${authenticationType}", but no auth tokens could be fetched from the destination service.`
     );
   }
   const usableTokens = authTokens.filter(
@@ -223,6 +245,7 @@ async function getAuthenticationRelatedHeaders(
       return {};
     case 'OAuth2SAMLBearerAssertion':
     case 'OAuth2UserTokenExchange':
+    case 'OAuth2JWTBearer':
     case 'OAuth2ClientCredentials':
       return headerFromTokens(
         destination.authentication,
@@ -234,7 +257,7 @@ async function getAuthenticationRelatedHeaders(
       return headerForPrincipalPropagation(destination);
     default:
       throw Error(
-        `The destination used "${destination.authentication}" as authentication type which is not supported by the SDK.`
+        `The destination used "${destination.authentication}" as authentication type which is not supported by the SAP Cloud SDK.`
       );
   }
 }

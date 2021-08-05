@@ -1,6 +1,7 @@
 import { createLogger, ErrorWithCause, first } from '@sap-cloud-sdk/util';
 import * as xsenv from '@sap/xsenv';
-import { audiences, DecodedJWT, decodeJwt } from './jwt';
+import { JwtPayload } from 'jsonwebtoken';
+import { audiences, decodeJwt } from './jwt';
 import {
   DestinationServiceCredentials,
   Service,
@@ -90,7 +91,7 @@ export function getServiceList(service: string): Service[] {
  * @returns The first found service.
  */
 export function getService(service: string): Service | undefined {
-  const services = xsenv.filterServices({ label: service }) as Service[];
+  const services: Service[] = xsenv.filterServices({ label: service });
 
   if (!services.length) {
     logger.warn(
@@ -203,7 +204,7 @@ export function getDestinationServiceUri(): string | null {
  * @returns The credentials for a match, otherwise null.
  */
 export function getXsuaaServiceCredentials(
-  token?: DecodedJWT | string
+  token?: JwtPayload | string
 ): XsuaaServiceCredentials {
   if (typeof token === 'string') {
     return getXsuaaServiceCredentials(decodeJwt(token)); // Decode without verifying
@@ -226,7 +227,7 @@ export function resolveService(service: string | Service): Service {
 
     if (!serviceInstance) {
       throw Error(
-        `Unable to get access token for "${service}" service! No service instance of type "${service}" found.`
+        `Unable to get access token for "${service}" service. No service instance of type "${service}" found.`
       );
     }
 
@@ -250,12 +251,12 @@ export function extractClientCredentials(
   };
 }
 
-function selectXsuaaInstance(token?: DecodedJWT): XsuaaServiceCredentials {
+function selectXsuaaInstance(token?: JwtPayload): XsuaaServiceCredentials {
   const xsuaaInstances = getServiceList('xsuaa');
 
   if (!xsuaaInstances.length) {
     throw Error(
-      'No binding to an XSUAA service instance found. Please make sure to bind an instance of the XSUAA service to your application!'
+      'No binding to an XSUAA service instance found. Please make sure to bind an instance of the XSUAA service to your application.'
     );
   }
 
@@ -280,7 +281,7 @@ function selectXsuaaInstance(token?: DecodedJWT): XsuaaServiceCredentials {
 function applyStrategiesInOrder(
   selectionStrategies: SelectionStrategyFn[],
   xsuaaInstances: Record<string, any>[],
-  token?: DecodedJWT
+  token?: JwtPayload
 ): Record<string, any>[] {
   return selectionStrategies.reduce(
     (result, strategy) =>
@@ -291,12 +292,12 @@ function applyStrategiesInOrder(
 
 type SelectionStrategyFn = (
   xsuaaInstances: Record<string, any>[],
-  token?: DecodedJWT
+  token?: JwtPayload
 ) => Record<string, any>[];
 
 function matchingClientId(
   xsuaaInstances: Record<string, any>[],
-  token?: DecodedJWT
+  token?: JwtPayload
 ): Record<string, any>[] {
   if (!token) {
     return [];
@@ -308,7 +309,7 @@ function matchingClientId(
 
 function matchingAudience(
   xsuaaInstances: Record<string, any>[],
-  token?: DecodedJWT
+  token?: JwtPayload
 ): Record<string, any>[] {
   if (!token) {
     return [];

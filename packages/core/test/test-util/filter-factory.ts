@@ -13,7 +13,8 @@ import {
   TestEntity as TestEntityV4,
   TestEntityLvl2MultiLink,
   TestEntityLvl2SingleLink,
-  TestEntityMultiLink as TestEntityMultiLinkV4
+  TestEntityMultiLink as TestEntityMultiLinkV4,
+  TestEnumType
 } from './test-services/v4/test-service';
 
 export const testFilterString = {
@@ -66,6 +67,17 @@ export const testFilterLambdaExpressionOnLink = {
     "(to_MultiLink/any(a0:(a0/StringProperty eq 'test1')) and to_MultiLink/all(a0:(a0/StringProperty eq 'test2')))"
 };
 
+export const testFilterLambdaExpressionWithOr = {
+  filter: or(
+    TestEntityV4.STRING_PROPERTY.equals('str1'),
+    TestEntityV4.TO_MULTI_LINK.filter(
+      any(TestEntityMultiLinkV4.STRING_PROPERTY.equals('str2'))
+    )
+  ),
+  odataStr:
+    "(StringProperty eq 'str1' or (to_MultiLink/any(a0:(a0/StringProperty eq 'str2'))))"
+};
+
 export const testFilterLambdaExpressionFilterListOnLink = {
   filter: TestEntityV4.TO_MULTI_LINK.filter(
     any(
@@ -115,6 +127,6 @@ export const testFilterLambdaExpressionFilterFunctionOnLink = {
 };
 
 export const testFilterEnum = {
-  filter: TestEntityV4.ENUM_PROPERTY.equals('test'),
-  odataStr: "EnumProperty eq 'test'"
+  filter: TestEntityV4.ENUM_PROPERTY.equals(TestEnumType.Member1),
+  odataStr: "EnumProperty eq 'Member1'"
 };

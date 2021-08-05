@@ -16,6 +16,10 @@ var __extends =
       return extendStatics(d, b);
     };
     return function (d, b) {
+      if (typeof b !== 'function' && b !== null)
+        throw new TypeError(
+          'Class extends value ' + String(b) + ' is not a constructor or null'
+        );
       extendStatics(d, b);
       function __() {
         this.constructor = d;
@@ -103,32 +107,33 @@ var TestEntityLvl3MultiLink = /** @class */ (function (_super) {
 })(core_1.EntityV4);
 exports.TestEntityLvl3MultiLink = TestEntityLvl3MultiLink;
 (function (TestEntityLvl3MultiLink) {
+  var _fieldBuilder = new core_1.FieldBuilder(TestEntityLvl3MultiLink);
   /**
    * Static representation of the [[stringProperty]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntityLvl3MultiLink.STRING_PROPERTY = new core_1.StringField(
+  TestEntityLvl3MultiLink.STRING_PROPERTY = _fieldBuilder.buildEdmTypeField(
     'StringProperty',
-    TestEntityLvl3MultiLink,
-    'Edm.String'
+    'Edm.String',
+    true
   );
   /**
    * Static representation of the [[guidProperty]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntityLvl3MultiLink.GUID_PROPERTY = new core_1.StringField(
+  TestEntityLvl3MultiLink.GUID_PROPERTY = _fieldBuilder.buildEdmTypeField(
     'GuidProperty',
-    TestEntityLvl3MultiLink,
-    'Edm.Guid'
+    'Edm.Guid',
+    true
   );
   /**
    * Static representation of the [[keyProperty]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntityLvl3MultiLink.KEY_PROPERTY = new core_1.StringField(
+  TestEntityLvl3MultiLink.KEY_PROPERTY = _fieldBuilder.buildEdmTypeField(
     'KeyProperty',
-    TestEntityLvl3MultiLink,
-    'Edm.String'
+    'Edm.String',
+    false
   );
   /**
    * All fields of the TestEntityLvl3MultiLink entity.

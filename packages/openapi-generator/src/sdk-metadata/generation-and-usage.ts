@@ -1,13 +1,12 @@
 import { first } from '@sap-cloud-sdk/util';
 import {
   GenerationAndUsage,
-  InstructionWithText,
   getLinks,
   getSdkVersion,
-  apiSpecificUsageText,
-  genericUsageText,
   getGenerationSteps,
-  Links
+  Links,
+  InstructionWithTextAndHeader,
+  usageHeaderText
 } from '@sap-cloud-sdk/generator-common';
 import { OpenApiDocument } from '../openapi-types';
 import { apiSpecificCodeSample, genericCodeSample } from './code-sample';
@@ -16,9 +15,18 @@ export async function getGenerationAndUsage(
   openApiDocument: OpenApiDocument
 ): Promise<GenerationAndUsage> {
   return {
+    ...(await getGenericGenerationAndUsage()),
+    apiSpecificUsage: getApiSpecificUsage(openApiDocument)
+  };
+}
+
+// will be used to generate metadata for failed and unknown case.
+export async function getGenericGenerationAndUsage(): Promise<GenerationAndUsage> {
+  return {
     genericUsage: getGenericUsage(),
-    apiSpecificUsage: getApiSpecificUsage(openApiDocument),
+    apiSpecificUsage: undefined,
     links: getOpenApiLinks(),
+    repository: 'npm',
     generationSteps: getGenerationSteps(
       'npm install -g @sap-cloud-sdk/openapi-generator',
       'openapi-generator --inputDir <inputDirectory> --outputDir <outputDirectory>',
@@ -30,16 +38,16 @@ export async function getGenerationAndUsage(
   };
 }
 
-function getGenericUsage(): InstructionWithText {
+function getGenericUsage(): InstructionWithTextAndHeader {
   return {
-    instructions: genericCodeSample(),
-    text: genericUsageText
+    ...genericCodeSample(),
+    header: usageHeaderText
   };
 }
 
 function getApiSpecificUsage(
   openApiDocument: OpenApiDocument
-): InstructionWithText {
+): InstructionWithTextAndHeader {
   const apiWithOperations = first(
     openApiDocument.apis.filter(api => api.operations.length > 0)
   );
@@ -51,9 +59,17 @@ function getApiSpecificUsage(
       operation.operationId,
       openApiDocument.serviceOptions.packageName
     );
-    return { instructions, text: apiSpecificUsageText };
+    return {
+      ...instructions,
+
+      header: usageHeaderText
+    };
   }
-  return { instructions: '', text: apiSpecificUsageText };
+  return {
+    instructions: '',
+    text: '',
+    header: usageHeaderText
+  };
 }
 
 export const linkGenerationDocumentation =

@@ -15,7 +15,7 @@ export const entityName: VdmProperty = {
   staticPropertyName: 'ENTITY_NAME',
   propertyNameAsParam: 'entityName',
   jsType: 'string',
-  fieldType: 'StringField',
+  fieldType: 'EdmTypeField',
   originalName: 'EntityName',
   edmType: 'Edm.String',
   description: 'The name of the entity.',
@@ -28,7 +28,7 @@ export const numberOfEggs: VdmProperty = {
   staticPropertyName: 'NUMBER_OF_EGGS',
   propertyNameAsParam: 'numberOfEggs',
   jsType: 'BigNumber',
-  fieldType: 'BigNumberField',
+  fieldType: 'OrderableEdmTypeField',
   originalName: 'A_noEggs',
   edmType: 'Edm.Decimal',
   description: 'The number of eggs for breakfast.',
@@ -41,7 +41,7 @@ export const breakfastTime: VdmProperty = {
   staticPropertyName: 'BREAKFAST_TIME',
   propertyNameAsParam: 'breakfastTime',
   jsType: 'Time',
-  fieldType: 'TimeField',
+  fieldType: 'OrderableEdmTypeField',
   originalName: 'BreakfastTime',
   edmType: 'Edm.DateTime',
   description: 'The time of breakfast.',
@@ -109,7 +109,11 @@ export const foodService: VdmServiceMetadata = {
 export const enumMeal: VdmEnumType = {
   originalName: 'EnumMealName',
   typeName: 'EnumMealType',
-  members: ['member1', 'member2']
+  members: [
+    { name: 'member1', originalValue: '0' },
+    { name: 'member2', originalValue: '1' }
+  ],
+  underlyingType: 'Edm.Int32'
 };
 
 export const complexMeal: VdmComplexType = {
@@ -122,7 +126,7 @@ export const complexMeal: VdmComplexType = {
       originalName: 'Complexity',
       description: 'something something very good',
       edmType: 'Edm.String',
-      fieldType: 'ComplexTypeStringPropertyField',
+      fieldType: 'EdmTypeField',
       nullable: false,
       instancePropertyName: 'complexity',
       propertyNameAsParam: 'complexity',
@@ -134,7 +138,7 @@ export const complexMeal: VdmComplexType = {
       originalName: 'Amount',
       description: 'something something very much',
       edmType: 'Edm.Int16',
-      fieldType: 'ComplexTypeNumberPropertyField',
+      fieldType: 'OrderableEdmTypeField',
       nullable: false,
       instancePropertyName: 'amount',
       propertyNameAsParam: 'amount',
@@ -156,7 +160,7 @@ export const complexDesert: VdmComplexType = {
       originalName: 'Amount',
       description: 'Amount of the desert',
       edmType: 'Edm.Int16',
-      fieldType: 'ComplexTypeNumberPropertyField',
+      fieldType: 'OrderableEdmTypeField',
       nullable: false,
       instancePropertyName: 'amount',
       propertyNameAsParam: 'amount',
@@ -168,7 +172,7 @@ export const complexDesert: VdmComplexType = {
       originalName: 'Name',
       description: 'name of the desert',
       edmType: 'Edm.String',
-      fieldType: 'ComplexTypeStringPropertyField',
+      fieldType: 'EdmTypeField',
       nullable: false,
       instancePropertyName: 'name',
       propertyNameAsParam: 'name',
@@ -203,7 +207,7 @@ export const complexMealWithDesert: VdmComplexType = {
       originalName: 'Amount',
       description: 'something something very much',
       edmType: 'Edm.Int16',
-      fieldType: 'ComplexTypeNumberPropertyField',
+      fieldType: 'OrderableEdmTypeField',
       nullable: false,
       instancePropertyName: 'amount',
       propertyNameAsParam: 'amount',
@@ -215,7 +219,7 @@ export const complexMealWithDesert: VdmComplexType = {
   namespace: ''
 };
 
-export const orderBreakfast: VdmFunctionImport = {
+const orderBreakfastBuilder = (isNullable: boolean): VdmFunctionImport => ({
   description: 'order a breakfast',
   name: 'orderBreakfast',
   httpMethod: 'post',
@@ -224,11 +228,11 @@ export const orderBreakfast: VdmFunctionImport = {
     {
       originalName: 'WithHoneyToast',
       parameterName: 'withHoneyToast',
-      nullable: true,
+      nullable: isNullable,
       description: 'Breakfast includes a honey toast',
       edmType: 'Edm.Boolean',
       jsType: 'boolean',
-      fieldType: 'BooleanField'
+      fieldType: 'EdmTypeField'
     }
   ],
   parametersTypeName: 'Params',
@@ -236,9 +240,13 @@ export const orderBreakfast: VdmFunctionImport = {
     builderFunction: '(val) => edmToTs(val, Edm.String)',
     returnType: 'string',
     isCollection: false,
+    isNullable: false,
     returnTypeCategory: VdmReturnTypeCategory.EDM_TYPE
   }
-};
+});
+
+export const orderBreakfast = orderBreakfastBuilder(false);
+export const orderBreakfastNullable = orderBreakfastBuilder(true);
 
 export const entityNotDeserializable: VdmFunctionImport = {
   description: 'entityNotDeserializable',
@@ -251,6 +259,7 @@ export const entityNotDeserializable: VdmFunctionImport = {
     builderFunction: '',
     returnType: 'never',
     isCollection: false,
+    isNullable: false,
     returnTypeCategory: VdmReturnTypeCategory.NEVER,
     unsupportedReason: VdmUnsupportedReason.ENTITY_NOT_DESERIALIZABLE
   }

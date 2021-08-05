@@ -1,5 +1,6 @@
 import { createLogger } from '@sap-cloud-sdk/util';
-import { DecodedJWT, decodeJwt, verifyJwt } from '../jwt';
+import { JwtPayload } from 'jsonwebtoken';
+import { decodeJwt, verifyJwt } from '../jwt';
 import {
   addProxyConfigurationInternet,
   ProxyStrategy,
@@ -30,6 +31,9 @@ import { destinationCache } from './destination-cache';
 import type { DestinationOptions } from './destination-accessor';
 
 type DestinationOrigin = 'subscriber' | 'provider';
+
+type RequiredProperties<T, P extends keyof T> = Required<Pick<T, P>> &
+  Omit<T, P>;
 
 const logger = createLogger({
   package: 'core',
@@ -113,6 +117,9 @@ class DestinationFromServiceRetriever {
     if (destination.authentication === 'OAuth2ClientCredentials') {
       destination = await da.addOAuth2ClientCredentials();
     }
+    if (destination.authentication === 'OAuth2JWTBearer') {
+      destination = await da.fetchDestinationByUserJwt();
+    }
     if (destination.authentication === 'ClientCertificateAuthentication') {
       destination = await da.addClientCertAuth();
     }
@@ -124,7 +131,7 @@ class DestinationFromServiceRetriever {
 
   private static async getDecodedUserJwt(
     options: DestinationOptions
-  ): Promise<DecodedJWT | undefined> {
+  ): Promise<JwtPayload | undefined> {
     return options.userJwt
       ? verifyJwt(options.userJwt, options)
       : options.iss
@@ -151,31 +158,35 @@ class DestinationFromServiceRetriever {
     return serviceToken('destination', options);
   }
 
-  readonly decodedProviderClientCredentialsToken: DecodedJWT;
-  private options: DestinationOptions;
+  readonly decodedProviderClientCredentialsToken: JwtPayload;
+  private options: RequiredProperties<
+    DestinationOptions,
+    'isolationStrategy' | 'selectionStrategy' | 'useCache'
+  >;
 
   private constructor(
     readonly name: string,
     options: DestinationOptions,
-    readonly decodedUserJwt: DecodedJWT | undefined,
+    readonly decodedUserJwt: JwtPayload | undefined,
     readonly providerClientCredentialsToken: string
   ) {
-    this.options = { ...options };
     this.decodedProviderClientCredentialsToken = decodeJwt(
       providerClientCredentialsToken
     );
 
-    this.options.isolationStrategy =
-      options.isolationStrategy || IsolationStrategy.Tenant;
-    this.options.selectionStrategy =
-      options.selectionStrategy || subscriberFirst;
-    this.options.useCache = options.useCache || false;
+    const defaultOptions = {
+      isolationStrategy: IsolationStrategy.Tenant,
+      selectionStrategy: subscriberFirst,
+      useCache: false,
+      ...options
+    };
+    this.options = { ...defaultOptions, ...options };
   }
 
   private async searchDestinationWithSelectionStrategyAndCache(): Promise<
     DestinationSearchResult | undefined
   > {
-    let destinationSearchResult;
+    let destinationSearchResult: DestinationSearchResult | undefined;
     if (this.isSubscriberNeeded()) {
       destinationSearchResult =
         await this.searchSubscriberAccountForDestination();
@@ -186,12 +197,12 @@ class DestinationFromServiceRetriever {
         await this.searchProviderAccountForDestination();
     }
     if (destinationSearchResult && !destinationSearchResult.fromCache) {
-      logger.info(
+      logger.debug(
         'Successfully retrieved destination from destination service.'
       );
     }
     if (destinationSearchResult && destinationSearchResult.fromCache) {
-      logger.info(
+      logger.debug(
         `Successfully retrieved destination from destination service cache for ${destinationSearchResult.origin} destinations.`
       );
     }
@@ -228,7 +239,7 @@ class DestinationFromServiceRetriever {
     const credentials = getDestinationServiceCredentialsList();
     if (!credentials || credentials.length === 0) {
       throw Error(
-        'No binding to a Destination service instance found. Please bind a destination service instance to your application!'
+        'No binding to a destination service instance found. Please bind a destination service instance to your application.'
       );
     }
 
@@ -247,12 +258,13 @@ class DestinationFromServiceRetriever {
       this.options
     );
   }
+
   private async getAuthTokenForOAuth2UserTokenExchange(
     destinationOrigin: DestinationOrigin
   ): Promise<AuthAndExchangeTokens> {
     if (!this.options.userJwt) {
       throw Error(
-        'No user token (JWT) has been provided! This is strictly necessary for OAuth2UserTokenExchange.'
+        'No user token (JWT) has been provided. This is strictly necessary for `OAuth2UserTokenExchange`.'
       );
     }
 
@@ -324,8 +336,6 @@ class DestinationFromServiceRetriever {
     destination: Destination,
     destinationOrigin: DestinationOrigin
   ): Promise<Destination> {
-    const destinationService = getDestinationService();
-
     /* This covers the two technical user propagation cases https://help.sap.com/viewer/cca91383641e40ffbe03bdc78f00f681/Cloud/en-US/3cb7b81115c44cf594e0e3631291af94.html
    If the destination comes from the provider account the client credentials token from the xsuaa.url is used (provider token).
    If the destination comes from the subscriber account the subscriber subdomain is used fetch the client credentials token (subscriber token).
@@ -338,19 +348,26 @@ class DestinationFromServiceRetriever {
               this.options
             );
       logger.debug(
-        `System user found on destination. The ${destinationOrigin} token: ${token} is used for destination fetching`
+        `System user found on destination. The ${destinationOrigin} token: ${token} is used for destination fetching.`
       );
 
       if (destinationOrigin) {
         return this.fetchDestinationByToken(token);
       }
     }
+
+    return this.fetchDestinationByUserJwt();
+  }
+
+  private async fetchDestinationByUserJwt(): Promise<Destination> {
+    const destinationService = getDestinationService();
+
     /* This covers the two business user propagation cases https://help.sap.com/viewer/cca91383641e40ffbe03bdc78f00f681/Cloud/en-US/3cb7b81115c44cf594e0e3631291af94.html
      The two cases are JWT issued from provider or JWT from subscriber - the two cases are handled automatically.
      In the provider case the subdomain replacement in the xsuaa.url with the iss value does nothing but this does not hurt. */
     if (!this.options.userJwt) {
       throw Error(
-        'No user token (JWT) has been provided! This is strictly necessary for principal propagation.'
+        'No user token (JWT) has been provided. This is strictly necessary for principal propagation.'
       );
     }
     const accessToken = await jwtBearerToken(
@@ -404,7 +421,7 @@ class DestinationFromServiceRetriever {
         ? this.decodedUserJwt!
         : this.decodedProviderClientCredentialsToken,
       destination,
-      this.options.isolationStrategy!
+      this.options.isolationStrategy
     );
   }
 
@@ -414,7 +431,7 @@ class DestinationFromServiceRetriever {
     const provider = await this.getInstanceAndSubaccountDestinations(
       this.providerClientCredentialsToken
     );
-    const destination = await this.options.selectionStrategy!(
+    const destination = this.options.selectionStrategy(
       {
         subscriber: emptyDestinationByType,
         provider
@@ -434,7 +451,7 @@ class DestinationFromServiceRetriever {
     const destination = destinationCache.retrieveDestinationFromCache(
       this.decodedProviderClientCredentialsToken,
       this.name,
-      this.options.isolationStrategy!
+      this.options.isolationStrategy
     );
 
     if (destination) {
@@ -452,7 +469,7 @@ class DestinationFromServiceRetriever {
     const subscriber = await this.getInstanceAndSubaccountDestinations(
       accessToken
     );
-    const destination = this.options.selectionStrategy!(
+    const destination = this.options.selectionStrategy(
       {
         subscriber,
         provider: emptyDestinationByType
@@ -469,7 +486,7 @@ class DestinationFromServiceRetriever {
     const destination = destinationCache.retrieveDestinationFromCache(
       this.decodedUserJwt!,
       this.name,
-      this.options.isolationStrategy!
+      this.options.isolationStrategy
     );
 
     if (destination) {
@@ -488,11 +505,12 @@ class DestinationFromServiceRetriever {
   }
 
   private isProviderNeeded(
-    resultFromSubscriber: DestinationSearchResult
+    resultFromSubscriber: DestinationSearchResult | undefined
   ): boolean {
     if (this.options.selectionStrategy === alwaysSubscriber) {
       return false;
     }
+
     if (
       this.options.selectionStrategy === subscriberFirst &&
       resultFromSubscriber
@@ -522,22 +540,18 @@ class DestinationFromServiceRetriever {
   private async searchProviderAccountForDestination(): Promise<
     DestinationSearchResult | undefined
   > {
-    let destination;
-    if (this.options.useCache) {
-      destination = this.getProviderDestinationCache();
-    }
-
-    return destination || this.getProviderDestinationService();
+    return (
+      (this.options.useCache && this.getProviderDestinationCache()) ||
+      this.getProviderDestinationService()
+    );
   }
 
   private async searchSubscriberAccountForDestination(): Promise<
     DestinationSearchResult | undefined
   > {
-    let destination;
-    if (this.options.useCache) {
-      destination = this.getSubscriberDestinationCache();
-    }
-
-    return destination || this.getSubscriberDestinationService();
+    return (
+      (this.options.useCache && this.getSubscriberDestinationCache()) ||
+      this.getSubscriberDestinationService()
+    );
   }
 }

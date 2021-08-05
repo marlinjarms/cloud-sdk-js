@@ -16,6 +16,10 @@ var __extends =
       return extendStatics(d, b);
     };
     return function (d, b) {
+      if (typeof b !== 'function' && b !== null)
+        throw new TypeError(
+          'Class extends value ' + String(b) + ' is not a constructor or null'
+        );
       extendStatics(d, b);
       function __() {
         this.constructor = d;
@@ -50,6 +54,7 @@ exports.TestEntity1 = void 0;
  */
 var TestEntity1RequestBuilder_1 = require('./TestEntity1RequestBuilder');
 var TestComplexType1_1 = require('./TestComplexType1');
+var TestEnumType1_1 = require('./TestEnumType1');
 var core_1 = require('@sap-cloud-sdk/core');
 /**
  * This class represents the entity "A_TestEntity1" of service "API_MULTIPLE_SCHEMAS_SRV".
@@ -100,38 +105,43 @@ var TestEntity1 = /** @class */ (function (_super) {
 })(core_1.EntityV4);
 exports.TestEntity1 = TestEntity1;
 (function (TestEntity1) {
+  var _fieldBuilder = new core_1.FieldBuilder(TestEntity1);
   /**
    * Static representation of the [[keyPropertyString]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntity1.KEY_PROPERTY_STRING = new core_1.StringField(
+  TestEntity1.KEY_PROPERTY_STRING = _fieldBuilder.buildEdmTypeField(
     'KeyPropertyString',
-    TestEntity1,
-    'Edm.String'
+    'Edm.String',
+    false
   );
   /**
    * Static representation of the [[int16Property]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntity1.INT_16_PROPERTY = new core_1.NumberField(
+  TestEntity1.INT_16_PROPERTY = _fieldBuilder.buildEdmTypeField(
     'Int16Property',
-    TestEntity1,
-    'Edm.Int16'
+    'Edm.Int16',
+    true
   );
   /**
    * Static representation of the [[enumProperty]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntity1.ENUM_PROPERTY = new core_1.EnumField('EnumProperty', TestEntity1);
+  TestEntity1.ENUM_PROPERTY = _fieldBuilder.buildEnumField(
+    'EnumProperty',
+    TestEnumType1_1.TestEnumType1,
+    true
+  );
   /**
    * Static representation of the [[complexTypeProperty]] property for query construction.
    * Use to reference this property in query operations such as 'select' in the fluent request API.
    */
-  TestEntity1.COMPLEX_TYPE_PROPERTY =
-    new TestComplexType1_1.TestComplexType1Field(
-      'ComplexTypeProperty',
-      TestEntity1
-    );
+  TestEntity1.COMPLEX_TYPE_PROPERTY = _fieldBuilder.buildComplexTypeField(
+    'ComplexTypeProperty',
+    TestComplexType1_1.TestComplexType1Field,
+    true
+  );
   /**
    * All fields of the TestEntity1 entity.
    */

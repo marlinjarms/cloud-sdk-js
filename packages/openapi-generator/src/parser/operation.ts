@@ -22,8 +22,8 @@ export function parseOperation(
   refs: OpenApiDocumentRefs,
   options: ParserOptions
 ): OpenApiOperation {
-  const requestBody = parseRequestBody(operation.requestBody, refs);
-  const response = parseResponses(operation.responses, refs);
+  const requestBody = parseRequestBody(operation.requestBody, refs, options);
+  const response = parseResponses(operation.responses, refs, options);
   const relevantParameters = getRelevantParameters(
     [...(pathItemParameters || []), ...(operation.parameters || [])],
     refs
@@ -46,7 +46,7 @@ export function parseOperation(
     method,
     requestBody,
     response,
-    queryParameters: parseParameters(queryParams, refs),
+    queryParameters: parseParameters(queryParams, refs, options),
     pathParameters,
     pathPattern: parsePathPattern(pathPattern, pathParameters),
     operationId: operation.operationId!,
@@ -72,12 +72,39 @@ function isPlaceholder(pathPart: string): boolean {
   return /^\{.+\}$/.test(pathPart);
 }
 
+function isValidPlaceholder(placeholder: string): boolean {
+  // This regex matches the cases:
+  // 1. it starts with `{`
+  // 2. it ends with `}`
+  // 3. it does not contain any other `{` or `}` in the middle
+  return /^\{[^{}]+\}$/.test(placeholder);
+}
+
+// This function checks whether the given path pattern is valid. Typically, it detects the invalid pattern like below
+// 1. `/path/{p1}:{p2}`
+// 2. `/path?{param}`
+function isValidPathPattern(
+  pathPattern: string,
+  placeholders: string[]
+): boolean {
+  return (
+    pathPattern.includes('?') ||
+    placeholders.some(placeholder => !isValidPlaceholder(placeholder))
+  );
+}
+
 function sortPathParameters(
   pathParameters: OpenAPIV3.ParameterObject[],
   pathPattern: string
 ): OpenAPIV3.ParameterObject[] {
   const pathParts = pathPattern.split('/');
   const placeholders = pathParts.filter(part => isPlaceholder(part));
+
+  if (isValidPathPattern(pathPattern, placeholders)) {
+    throw new Error(
+      `Path pattern '${pathPattern}' is invalid or not supported.`
+    );
+  }
 
   return placeholders.map(placeholder => {
     const strippedPlaceholder = placeholder.slice(1, -1);
@@ -122,8 +149,9 @@ export function parsePathParameters(
   refs: OpenApiDocumentRefs,
   options: ParserOptions
 ): OpenApiParameter[] {
+  // todo validate
   const sortedPathParameters = sortPathParameters(pathParameters, pathPattern);
-  const parsedParameters = parseParameters(sortedPathParameters, refs);
+  const parsedParameters = parseParameters(sortedPathParameters, refs, options);
   const uniqueNames = ensureUniqueNames(
     parsedParameters.map(({ originalName }) => originalName),
     options,
@@ -140,11 +168,12 @@ export function parsePathParameters(
 
 export function parseParameters(
   pathParameters: OpenAPIV3.ParameterObject[],
-  refs: OpenApiDocumentRefs
+  refs: OpenApiDocumentRefs,
+  options: ParserOptions
 ): OpenApiParameter[] {
   return pathParameters.map(param => ({
     ...param,
     originalName: param.name,
-    schema: parseSchema(param.schema, refs)
+    schema: parseSchema(param.schema, refs, options)
   }));
 }

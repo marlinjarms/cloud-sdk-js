@@ -8,6 +8,7 @@ import {
   parsePathPattern
 } from './operation';
 
+const defaultOptions = { strictNaming: true };
 describe('getRelevantParameters', () => {
   it('ignores cookie and header parameters', async () => {
     expect(
@@ -80,7 +81,9 @@ describe('getRelevantParameters', () => {
 
 describe('parseParameters', () => {
   it('returns empty arrays if there are no parameters', async () => {
-    expect(parseParameters([], await createTestRefs())).toEqual([]);
+    expect(parseParameters([], await createTestRefs(), defaultOptions)).toEqual(
+      []
+    );
   });
 
   it('parses the parameter schema', async () => {
@@ -93,7 +96,8 @@ describe('parseParameters', () => {
             schema: { type: 'object' }
           }
         ],
-        await createTestRefs()
+        await createTestRefs(),
+        defaultOptions
       )
     ).toEqual([
       {
@@ -113,6 +117,28 @@ describe('parsePathParameters', () => {
         strictNaming: false
       })
     ).toEqual([]);
+  });
+
+  it('throws an error if multiple parameters defined in the same part of the path', async () => {
+    const refs = await createTestRefs();
+    expect(() =>
+      parsePathParameters([], '/test/{param1}:{param2}', refs, {
+        strictNaming: false
+      })
+    ).toThrowErrorMatchingInlineSnapshot(
+      '"Path pattern \'/test/{param1}:{param2}\' is invalid or not supported."'
+    );
+  });
+
+  it('throws an error if path pattern contains invalid characters', async () => {
+    const refs = await createTestRefs();
+    expect(() =>
+      parsePathParameters([], '/test/value?param={param}', refs, {
+        strictNaming: false
+      })
+    ).toThrowErrorMatchingInlineSnapshot(
+      '"Path pattern \'/test/value?param={param}\' is invalid or not supported."'
+    );
   });
 
   it('throws an error if the parameters do not match the path pattern', async () => {

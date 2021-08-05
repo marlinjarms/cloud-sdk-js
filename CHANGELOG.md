@@ -14,20 +14,82 @@
 
 ## Compatibility Notes
 
-- [eslint-config] Remove `brace-style` rule for compatibility with Prettier 2.3.
+- [odata-generator] Consider the `Nullable` property on action and function import parameters and return types correctly. 
+For parameters this is uncritical because the type is extended from `T` to `T | null` if the property is nullable. 
+For return types the same extension could lead compile errors after client regeneration because the is broadened including `null`. 
 
 ## New Functionality
 
--
+- [core] Support additional headers and query parameters, that are set on destinations.
 
 ## Improvements
 
--
+- [odata-generator] Add underlying type and value information as part of the API documentation for enums.
+- [odata-generator] Disallow invalid enum entries or random string parameters when building filters on enum properties.
 
 ## Fixed Issues
 
--
+- [odata-generator] Fix generation errors, when Enum type field is used as a key of an entity.
+- [core] Fix parsing of proxy environment variables to allow `-` in the host name.
+- [odata-generator] Fix action and function import typing, when parameter or return types are nullable.
 
+# 1.47.1
+
+Release Date: TBD<br>
+API Docs: https://sap.github.io/cloud-sdk/api/1.47.1<br>
+Blog: TBD<br>
+
+# 1.47.0
+
+Release Date: TBD<br>
+API Docs: https://sap.github.io/cloud-sdk/api/1.47.0<br>
+Blog: TBD<br>
+
+## New Functionality
+
+- [core] Support `OAuth2JWTBearer` authentication type.
+
+## Fixed Issues
+
+- [proxy] Fix destination service calls using web proxies.
+- [core] Fix type error to allow `null` values in filters for nullable properties.
+- [core] Fix OData filter runtime error, when using lambda expression with operands like `or`.
+
+# 1.46.0
+
+Release Date: TBD<br>
+API Docs: https://sap.github.io/cloud-sdk/api/1.46.0<br>
+Blog: TBD<br>
+
+## Compatibility Notes
+
+- [eslint-config] Remove `brace-style` rule for compatibility with Prettier 2.3.
+- [openapi-generator] Change the basis for directory, package, and service names, when generating clients. If not specified otherwise, the default is based on the directory name instead of the service name.
+- [core] Deprecate JWT related interfaces in favor of the interfaces provided by the `jsonwebtoken` library.
+The following interfaces were deprecated:
+  - `JWTHeader` (use `JwtHeader` instead, the property `typ` is now optional)
+  - `JWTPayload` (use `JwtPayload` instead)
+  - `CompleteDecodedJWT` (use `Jwt` instead)
+  - `RegisteredJWTClaims`
+  - `RegisteredJWTClaimsBasic`
+  - `RegisteredJWTClaimsTenant`
+  - `RegisteredJWTClaimsUser`
+
+## New Functionality
+
+- [openapi-generator] Add the `-c/--config` command line option to specify options through a configuration file instead of on the command line.
+
+## Improvements
+
+- [core] Support setting custom `SAP-Connectivity-Authentication` headers for Principal Propagation.
+- [openapi-generator] Improve the error message for invalid or unsupported path patterns.
+- [openapi-generator] Improve the error message when detecting invalid Swagger 2.0 specification files. 
+- [core] Improve types in convenience functions for JWT access. See "Compatibility Notes" for details.
+
+## Fixed Issues
+
+- [core] Fix type error to allow filtering on one-to-many navigation properties in lambda expressions.
+- [openapi-generator] Base uniqueness check for directory names on directory names in `optionsPerService` instead of the human readable service name.
 
 # 1.45.0
 
