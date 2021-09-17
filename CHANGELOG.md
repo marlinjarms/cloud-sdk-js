@@ -14,6 +14,29 @@
 
 ## Compatibility Notes
 
+-
+
+## New Functionality
+
+-
+
+## Improvements
+
+-
+
+## Fixed Issues
+
+-
+
+
+# 1.49.0
+
+Release Date: TBD<br>
+API Docs: https://sap.github.io/cloud-sdk/api/1.49.0<br>
+Blog: TBD<br>
+
+## Compatibility Notes
+
 - [core] Stop using client credentials to fetch public keys for token verification.
 - [core] Replace own implementation for requesting user tokens and client credential tokens from the XSUAA service with the `@sap/xssec` library.
 
@@ -23,7 +46,7 @@
 
 ## Improvements
 
--
+- [core] Reduce the number of warnings when selecting an XSUAA instance.
 
 ## Fixed Issues
 
