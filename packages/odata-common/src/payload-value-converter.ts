@@ -112,9 +112,6 @@ export const serializersCommon: EdmTypeMapping = {
   'Edm.Any': identity
 };
 
-/**
- * @hidden
- */
 export function createEdmToTs<V extends EdmTypeCommon>(deserializers: {
   [key in V]: (value: any) => V;
 }): (value, edmType: V) => V {
