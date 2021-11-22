@@ -68,9 +68,13 @@ function getCustomAuthHeaders(
   if (destination.authentication === 'PrincipalPropagation') {
     return pickIgnoreCase(customHeaders, 'SAP-Connectivity-Authentication');
   }
+  //TODO
+  // if (destination.authentication === 'NoAuthentication') {
+  //   return {};
+  // }
   return pickIgnoreCase(customHeaders, 'authorization');
 }
-
+//todo
 export async function getAuthHeaders(
   destination: Destination,
   customHeaders?: Record<string, any>
