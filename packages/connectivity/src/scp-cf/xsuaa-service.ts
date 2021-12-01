@@ -66,8 +66,8 @@ interface SubdomainAndZoneId {
 export function getSubdomainAndZoneId(
   jwt?: string | JwtPayload
 ): SubdomainAndZoneId {
-  let subdomain: string | null;
-  let zoneId: string | null;
+  let subdomain: string | null = null;
+  let zoneId: string | null = null;
 
   if (jwt) {
     const jwtPayload = typeof jwt === 'string' ? decodeJwt(jwt) : jwt;
