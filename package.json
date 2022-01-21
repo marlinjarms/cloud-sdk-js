@@ -58,6 +58,7 @@
     "check:license": "ts-node scripts/check-licenses.ts",
     "check:test-service": "yarn generate:test-services && yarn ts-node scripts/check-test-service-for-changes.ts",
     "check:public-api": "ts-node scripts/check-public-api-cli.ts",
+    "codehawk": "codehawk src",
     "connectivity": "yarn workspace @sap-cloud-sdk/connectivity",
     "generator": "yarn workspace @sap-cloud-sdk/generator",
     "generator-common": "yarn workspace @sap-cloud-sdk/generator-common",
@@ -102,7 +103,8 @@
     "ts-jest": "^27.0.5",
     "ts-node": "^10.0.0",
     "typedoc": "^0.22.3",
-    "typescript": "~4.4.4"
+    "typescript": "~4.4.4",
+    "codehawk-cli": "^8.3.1"
   },
   "dependencies": {},
   "resolutions": {

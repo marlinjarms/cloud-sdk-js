@@ -1,0 +1,4 @@
+{
+  "skipDirectories": ["/node_modules", "coverage", "test-packages", "test-resources"],
+  "minimumThreshold": 0
+}
