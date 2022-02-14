@@ -30,6 +30,26 @@ describe('setTestDestinationInEnv', () => {
     delete process.env['destinations'];
   });
 
+
+  it('test', () => {
+    setTestDestination({
+      name: 'name',
+      type: 'HTTP',
+      proxyType: 'Internet',
+      authentication: 'OAuth2ClientCredentials',
+      url: 'https://www.example.com',
+      tokenServiceUrl: 'https://www.token-service.com',
+      clientId: 'clientId',
+      clientSecret: 'clientSecret',
+      authTokens: [{
+        http_header: {
+          key: '',
+          value: ''
+        }
+      }]
+    })
+  })
+
   it('provided test destinations should be parsed in environment variables', () => {
     process.env['destinations'] = JSON.stringify([envDestination]);
     mockAllTestDestinations();
