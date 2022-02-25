@@ -14,6 +14,7 @@
   "repository": "github:SAP/cloud-sdk-js",
   "workspaces": [
     "packages/connectivity",
+    "packages/eslint-plugin",
     "packages/http-client",
     "packages/openapi",
     "packages/odata-common",
@@ -59,6 +60,7 @@
     "check:test-service": "yarn generate:test-services && yarn ts-node scripts/check-test-service-for-changes.ts",
     "check:public-api": "ts-node scripts/check-public-api-cli.ts",
     "connectivity": "yarn workspace @sap-cloud-sdk/connectivity",
+    "eslint-plugin": "yarn workspace @sap-cloud-sdk/eslint-plugin",
     "generator": "yarn workspace @sap-cloud-sdk/generator",
     "generator-common": "yarn workspace @sap-cloud-sdk/generator-common",
     "http-client": "yarn workspace @sap-cloud-sdk/http-client",
