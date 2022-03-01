@@ -1,5 +1,7 @@
 import {
   ClassDeclarationStructure,
+  DecoratorStructure,
+  OptionalKind,
   PropertyDeclarationStructure,
   StructureKind
 } from 'ts-morph';
@@ -99,8 +101,25 @@ function property(prop: VdmProperty): PropertyDeclarationStructure {
           maxLength: prop.maxLength
         })
       )
-    ]
+    ],
+    decorators: getDecorators(prop)
   };
+}
+
+function getDecorators(prop: VdmProperty) : OptionalKind<DecoratorStructure>[] {
+  const erg : OptionalKind<DecoratorStructure>[] = []
+  if(prop.maxLength){
+    erg.push({
+      name: "MaxLength",
+      arguments: [prop.maxLength]
+    })
+  }
+  if(prop.nullable) {
+    erg.push({
+      name: "nullable"
+    })
+  }
+  return erg
 }
 
 /**
@@ -162,3 +181,4 @@ function navProperty(
     docs: [addLeadingNewline(getNavPropertyDescription(navProp))]
   };
 }
+
