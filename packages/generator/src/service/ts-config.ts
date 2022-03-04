@@ -19,7 +19,8 @@ export function tsConfig(): string {
           moduleResolution: 'node',
           esModuleInterop: true,
           inlineSources: false,
-          strict: true
+          strict: true,
+          experimentalDecorators: true,
         },
         include: ['**/*.ts'],
         exclude: ['dist/**/*', 'test/**/*', '**/*.spec.ts', 'node_modules/**/*']
