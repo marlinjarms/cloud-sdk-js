@@ -116,7 +116,8 @@ function getDecorators(prop: VdmProperty) : OptionalKind<DecoratorStructure>[] {
   }
   if(prop.nullable) {
     erg.push({
-      name: "nullable"
+      name: "IsOptional", //@IsOptional()
+      arguments: []
     })
   }
   return erg
