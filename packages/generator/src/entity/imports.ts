@@ -54,3 +54,11 @@ function otherEntityImport(name: string): ImportDeclarationStructure {
     moduleSpecifier: `./${name}`
   };
 }
+
+export function classValidatorImport() : ImportDeclarationStructure {
+  return {
+    kind: StructureKind.ImportDeclaration,
+    namedImports: ["MaxLength","IsOptional"],
+    moduleSpecifier: "class-validator"
+  }
+}
